@@ -3,7 +3,7 @@ name: Import BurntJacket archive
 on:
   push:
     paths:
-      - '.bj-import-038'
+      - '.bj3-076'
 
 permissions:
   contents: write
@@ -18,12 +18,12 @@ jobs:
       - name: Decode and unpack application
         shell: bash
         run: |
-          cat .bj-import-* > /tmp/burntjacket.b64
+          cat .bj3-* > /tmp/burntjacket.b64
           base64 -d /tmp/burntjacket.b64 > /tmp/burntjacket.zip
           unzip -t /tmp/burntjacket.zip
           mkdir -p /tmp/burntjacket-import
           unzip -o /tmp/burntjacket.zip -d /tmp/burntjacket-import
-          rm -f .bj-import-* .burntjacket-import.zip.b64 .burntjacket-import.part*
+          rm -f .bj3-* .bj-import-* .burntjacket-import.zip.b64 .burntjacket-import.part*
           cp -a /tmp/burntjacket-import/. .
           rm -f .github/workflows/import-burntjacket.yml
       - name: Commit imported application
