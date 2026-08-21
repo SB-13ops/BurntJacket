@@ -1,0 +1,33 @@
+name: Import BurntJacket archive
+
+on:
+  push:
+    paths:
+      - '.burntjacket-import.zip.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decode and unpack application
+        shell: bash
+        run: |
+          base64 -d .burntjacket-import.zip.b64 > /tmp/burntjacket.zip
+          unzip -o /tmp/burntjacket.zip -d /tmp/burntjacket-import
+          rm -f .burntjacket-import.zip.b64
+          cp -a /tmp/burntjacket-import/. .
+          rm -f .github/workflows/import-burntjacket.yml
+      - name: Commit imported application
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import cleaned BurntJacket application" || exit 0
+          git push
