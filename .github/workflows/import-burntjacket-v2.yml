@@ -1,0 +1,36 @@
+name: Import BurntJacket archive v2
+
+on:
+  push:
+    paths:
+      - '.bj-import/chunk28'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reassemble and unpack application
+        shell: bash
+        run: |
+          cat .bj-import/chunk* > /tmp/burntjacket.zip.b64
+          base64 -d /tmp/burntjacket.zip.b64 > /tmp/burntjacket.zip
+          mkdir -p /tmp/burntjacket-import
+          unzip -o /tmp/burntjacket.zip -d /tmp/burntjacket-import
+          rm -rf .bj-import
+          rm -f .burntjacket-import.part00 .burntjacket-import.part01 .burntjacket-import.zip.b64 IMPORT-STATUS.txt apps/.import-check
+          cp -a /tmp/burntjacket-import/. .
+          rm -f .github/workflows/import-burntjacket.yml .github/workflows/import-burntjacket-v2.yml
+      - name: Commit imported application
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import cleaned BurntJacket application" || exit 0
+          git push
