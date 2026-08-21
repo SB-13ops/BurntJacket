@@ -1,0 +1,23 @@
+# Secrets
+.env
+.env.*
+!.env.example
+apps/web/.env.local
+apps/web/.env.local.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+apps/web/tsconfig.tsbuildinfo
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
