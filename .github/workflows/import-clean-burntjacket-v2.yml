@@ -21,24 +21,53 @@ jobs:
           ref: main
       - name: Rebuild repository from verified clean archive
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          fetch_api_blob() {
+            gh api "repos/${GITHUB_REPOSITORY}/git/blobs/$1" --jq .content | tr -d '\n' | base64 -d
+          }
           {
             cat .bj4-000
             cat .bj4-001
             cat .bj4-002
             cat .bj4-003
-            cat .fix-004
-            cat .fix-005
+
+            # clean 64k-80k: historical verified blobs
+            git cat-file blob ba0472444d1be9a5b42679e0cf53bc20ca7ea22d
+            git cat-file blob c9e799dc5dad782c97e25f992008aa1965282c59 | head -c 12000
+
+            # clean 80k-96k
+            git cat-file blob c9e799dc5dad782c97e25f992008aa1965282c59 | tail -c 8000
+            git cat-file blob 131bcab51f0d68f3de788a56ac53f9ab9705ffcc | head -c 8000
+
             cat .bj4-006
             cat .fix-007
             cat .bj4-008
             cat .fix-009
-            cat .fix-010
+
+            # clean 160k-168k from historical verified blobs
+            git cat-file blob 80980ed6584f125ad311676bb78b8b5e25c61813 | tail -c 4000
+            git cat-file blob 4f98b5c89ed7d76f0c31d9d7b42b607acb5c7dde | head -c 4000
+
+            # clean 168k-176k: eight individually hash-verified 1k blobs
+            fetch_api_blob 201f33600dd8f315c16f6a5fd9cb6c2f9b76539c
+            fetch_api_blob 21ea0f37007839bcdb168a3f117abf3ab8b9738f
+            fetch_api_blob f3c0cfbe527c620e1d1f2a8a604500642981012e
+            fetch_api_blob aa4a502d1de34eb168d58b31ba05c743a38fa2be
+            fetch_api_blob 2886f94f0d56865b66729b48133d48efdc36de97
+            fetch_api_blob af4a64ed82c53dba22adcf7a3db07bf2ecfba76a
+            fetch_api_blob afefc4390ced82f9629efbb92a55026765ea1d1b
+            fetch_api_blob 8931821534a9a63324e1901637e1d37ae561a5e7
+
             cat .bj4-011
             cat .bj4-012
             cat .fix-013
             cat .fix-014
-          } | tr -cd 'A-Za-z0-9+/=' > /tmp/burntjacket.b64
+          } > /tmp/burntjacket.b64
+
+          test "$(wc -c < /tmp/burntjacket.b64)" -eq 229096
           base64 -d /tmp/burntjacket.b64 > /tmp/burntjacket.zip
           echo 'a1b2bc4c00b9a38410b82de557229cfd39f005879a23aef63aa38b5b6bd831de  /tmp/burntjacket.zip' | sha256sum -c -
           unzip -t /tmp/burntjacket.zip
@@ -49,6 +78,7 @@ jobs:
       - name: Commit clean application
         shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
